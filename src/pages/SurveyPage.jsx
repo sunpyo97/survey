@@ -260,6 +260,15 @@ export default function SurveyPage() {
   const maxStep = availableSteps.length > 0 ? Math.max(...availableSteps) : 2;
   const currentStepQuestions = questions.filter(q => q.step === step);
 
+  // 전체 질문 기준 카테고리 순서 (번호 연속성 유지)
+  const globalCategoryOrder = [...questions]
+    .sort((a, b) => a.step - b.step)
+    .reduce((acc, q) => {
+      const cat = q.category || '';
+      if (cat && !acc.includes(cat)) acc.push(cat);
+      return acc;
+    }, []);
+
   const getLogicTargetStep = () => {
     for (const q of currentStepQuestions) {
       if (!q.logic) continue;
@@ -368,7 +377,7 @@ export default function SurveyPage() {
                 {cat && (
                   <div style={{ marginBottom: '16px', paddingBottom: '10px', borderBottom: '2px solid #e0e0e0' }}>
                     <h2 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-color)' }}>
-                      {catIdx + 1}. {cat}
+                      {globalCategoryOrder.indexOf(cat) + 1}. {cat}
                     </h2>
                   </div>
                 )}

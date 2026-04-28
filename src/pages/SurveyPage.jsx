@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
+import { supabase } from '../lib/supabase';
 
-
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbw-JZ4614gkk1gAgP5z3gFipL3uBKgyarikWHsSzZo68Pc3kYefzme2ZHdeDzJnr_yt/exec';
 const IS_DEV = import.meta.env.DEV;
 
 const RatingScale = ({ value, onChange, max = 5 }) => {
@@ -235,32 +234,20 @@ export default function SurveyPage() {
 
   useEffect(() => {
     const loadQuestions = async () => {
-      if (IS_DEV) {
-        setTimeout(() => {
-          setMentors([
-            { id: 'm1', name: '김코딩', role: '프론트엔드 개발 멘토' }
-          ]);
-          setQuestions([
-            { id: 'q1', step: 2, type: 'multiple_choice', title: '참여 경로는?', options: '["지인", "광고"]', required: true, logic: '{"지인":3, "광고":4}', shuffleOptions: true },
-            { id: 'q2', step: 3, type: 'short_text', title: '누구의 추천인가요?', required: true },
-            { id: 'q3', step: 4, type: 'checkbox', title: '관심 분야는?', options: '["개발", "디자인", "기획"]', required: false }
-          ]);
-          setStep(1);
-        }, 500);
-        return;
-      }
-
       try {
-        const res = await fetch(`${GAS_URL}?action=getQuestions`);
-        const result = await res.json();
-        if (result.success) {
-          setMentors(result.mentors || []);
-          setQuestions(result.questions || []);
-          setStep(1);
-        } else {
-          setStep(1);
-        }
+        const [{ data: qData }, { data: mData }] = await Promise.all([
+          supabase.from('questions').select('*').order('step'),
+          supabase.from('mentors').select('*'),
+        ]);
+        setQuestions((qData || []).map(q => ({
+          ...q,
+          imageUrl: q.image_url,
+          shuffleOptions: q.shuffle_options,
+        })));
+        setMentors(mData || []);
       } catch (err) {
+        console.error(err);
+      } finally {
         setStep(1);
       }
     };
@@ -337,15 +324,11 @@ export default function SurveyPage() {
     }
 
     try {
-      const res = await fetch(GAS_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'submitSurvey', answers: answers })
-      });
-      const result = await res.json();
-      if (result.success) setStep(maxStep + 1);
-      else alert('제출 실패: ' + result.message);
+      const { error } = await supabase.from('responses').insert({ answers });
+      if (error) throw error;
+      setStep(maxStep + 1);
     } catch (err) {
-      alert('제출 중 오류가 발생했습니다.');
+      alert('제출 중 오류가 발생했습니다: ' + err.message);
     } finally {
       setIsSubmitting(false);
     }

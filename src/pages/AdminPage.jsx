@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Plus, Trash2, ArrowUp, ArrowDown, Save, RefreshCw, Settings, Image as ImageIcon, GitBranch, Shuffle } from 'lucide-react';
-
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbw-JZ4614gkk1gAgP5z3gFipL3uBKgyarikWHsSzZo68Pc3kYefzme2ZHdeDzJnr_yt/exec';
-const IS_DEV = import.meta.env.DEV;
+import { supabase } from '../lib/supabase';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -24,26 +22,16 @@ export default function AdminPage() {
 
   const fetchQuestions = async () => {
     setIsLoading(true);
-    if (IS_DEV) {
-      setTimeout(() => {
-        setQuestions([
-          { id: 'q1', step: 2, type: 'multiple_choice', title: '참여 경로는 어떻게 되시나요?', description: '중복 선택이 가능합니다.', imageUrl: '', options: '["지인 추천", "SNS 광고", "검색"]', required: true, logic: '{}', shuffleOptions: false },
-          { id: 'q2', step: 3, type: 'rating5', title: '행사의 전반적인 만족도는 어떠신가요?', options: '', required: true, description: '', imageUrl: '', logic: '{}', shuffleOptions: false },
-          { id: 'q3', step: 4, type: 'long_text', title: '자유롭게 의견을 남겨주세요.', options: '', required: false, description: '', imageUrl: '', logic: '{}', shuffleOptions: false }
-        ]);
-        setIsLoading(false);
-      }, 500);
-      return;
-    }
-
     try {
-      const res = await fetch(`${GAS_URL}?action=getQuestions`);
-      const data = await res.json();
-      if (data.success) {
-        setQuestions(data.questions || []);
-      }
+      const { data, error } = await supabase.from('questions').select('*').order('step');
+      if (error) throw error;
+      setQuestions((data || []).map(q => ({
+        ...q,
+        imageUrl: q.image_url || '',
+        shuffleOptions: q.shuffle_options || false,
+      })));
     } catch (err) {
-      alert('데이터를 불러오는데 실패했습니다.');
+      alert('데이터를 불러오는데 실패했습니다: ' + err.message);
     } finally {
       setIsLoading(false);
     }
@@ -51,31 +39,31 @@ export default function AdminPage() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    if (IS_DEV) {
-      setTimeout(() => {
-        alert('저장되었습니다. (개발모드)');
-        console.log('Saved data:', questions);
-        setIsSaving(false);
-      }, 1000);
-      return;
-    }
-
     try {
-      const res = await fetch(GAS_URL, {
-        method: 'POST',
-        body: JSON.stringify({
-          action: 'saveQuestions',
-          questions: questions
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert('성공적으로 저장되었습니다.');
-      } else {
-        alert('저장 실패: ' + data.message);
+      const rows = questions.map(q => ({
+        id: q.id,
+        step: q.step,
+        type: q.type,
+        title: q.title,
+        description: q.description || '',
+        image_url: q.imageUrl || '',
+        options: q.options || '',
+        required: q.required || false,
+        logic: q.logic || '{}',
+        shuffle_options: q.shuffleOptions || false,
+      }));
+
+      const { error: delError } = await supabase.from('questions').delete().neq('id', '');
+      if (delError) throw delError;
+
+      if (rows.length > 0) {
+        const { error: insError } = await supabase.from('questions').insert(rows);
+        if (insError) throw insError;
       }
+
+      alert('성공적으로 저장되었습니다.');
     } catch (err) {
-      alert('저장 중 오류가 발생했습니다.');
+      alert('저장 중 오류가 발생했습니다: ' + err.message);
     } finally {
       setIsSaving(false);
     }

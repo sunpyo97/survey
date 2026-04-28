@@ -305,6 +305,19 @@ export default function AdminPage() {
     return String(val);
   };
 
+  const handleClearResponses = async () => {
+    if (responses.length === 0) { alert('삭제할 응답이 없습니다.'); return; }
+    if (!window.confirm(`응답 ${responses.length}건을 모두 삭제합니다. 이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?`)) return;
+    try {
+      const { error } = await supabase.from('responses').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (error) throw error;
+      setResponses([]);
+      alert('모든 응답이 삭제되었습니다.');
+    } catch (err) {
+      alert('삭제 중 오류가 발생했습니다: ' + err.message);
+    }
+  };
+
   const handleExportExcel = () => {
     if (responses.length === 0) { alert('내보낼 데이터가 없습니다.'); return; }
 
@@ -569,6 +582,10 @@ export default function AdminPage() {
               <button onClick={handleExportExcel}
                 style={{ padding: '8px 16px', cursor: 'pointer', borderRadius: '8px', border: 'none', background: '#217346', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Download size={16} /> 엑셀로 내보내기
+              </button>
+              <button onClick={handleClearResponses}
+                style={{ padding: '8px 16px', cursor: 'pointer', borderRadius: '8px', border: '1px solid #ff4d4f', background: '#fff', color: '#ff4d4f', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Trash2 size={16} /> 응답 초기화
               </button>
             </div>
           </div>

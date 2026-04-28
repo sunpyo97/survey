@@ -1,0 +1,320 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+:root {
+  --bg-color: #FDFCF8;
+  --text-color: #2D2A26;
+  --text-light: #7A766F;
+  --primary-color: #E86A33;
+  --primary-hover: #D65A23;
+  --border-color: #E6E2DA;
+  --card-bg: #FFFFFF;
+  --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+.app-container {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  box-shadow: 0 0 20px rgba(0,0,0,0.03);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header / Progress */
+.progress-bar {
+  height: 4px;
+  background-color: var(--border-color);
+  width: 100%;
+}
+.progress-fill {
+  height: 100%;
+  background-color: var(--primary-color);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.header {
+  padding: 24px;
+}
+.header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+.header p {
+  color: var(--text-light);
+  font-size: 15px;
+}
+
+/* Main Content Area */
+.content {
+  flex: 1;
+  padding: 0 24px 120px 24px; /* Bottom padding for fixed button */
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Question Cards */
+.question-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.question-title {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* Rating Scale (5-point) */
+.rating-options {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rating-btn {
+  flex: 1;
+  height: 48px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background-color: var(--card-bg);
+  color: var(--text-light);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rating-btn:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.rating-btn.selected {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #FFF;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(232, 106, 51, 0.2);
+}
+
+/* NPS Scale (11-point) */
+.nps-options {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+.nps-options .rating-btn {
+  height: 44px;
+}
+
+.scale-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 4px;
+}
+
+/* Inputs */
+.textarea-input {
+  width: 100%;
+  min-height: 120px;
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  font-family: var(--font-family);
+  font-size: 15px;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+.textarea-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+/* Bottom Actions Fixed */
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  padding: 20px 24px;
+  background: linear-gradient(to top, var(--bg-color) 80%, transparent);
+  display: flex;
+  gap: 12px;
+  z-index: 10;
+}
+
+.btn-primary, .btn-secondary {
+  height: 54px;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-primary {
+  flex: 1;
+  background-color: var(--text-color);
+  color: #FFF;
+}
+.btn-primary:active {
+  transform: scale(0.98);
+}
+.btn-primary:disabled {
+  background-color: var(--border-color);
+  color: var(--text-light);
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  width: 54px;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+.btn-secondary:active {
+  background-color: var(--bg-color);
+}
+
+/* Screen States */
+.state-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  text-align: center;
+  background-color: var(--bg-color);
+}
+
+.state-icon {
+  font-size: 48px;
+  margin-bottom: 24px;
+}
+.state-screen h2 {
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+.state-screen p {
+  color: var(--text-light);
+}
+
+/* Mentors List */
+.mentor-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.mentor-info h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.mentor-info p {
+  font-size: 13px;
+  color: var(--text-light);
+}
+
+/* Loader */
+.loader {
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Multiple Choice & Checkbox Options */
+.options-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.option-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background-color: var(--card-bg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.option-label:hover {
+  border-color: var(--primary-color);
+  background-color: rgba(232, 106, 51, 0.02);
+}
+
+.option-label:has(input:checked) {
+  border-color: var(--primary-color);
+  background-color: rgba(232, 106, 51, 0.05);
+}
+
+.radio-input, .checkbox-input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--primary-color);
+  cursor: pointer;
+}
+
+.option-text {
+  font-size: 16px;
+  color: var(--text-color);
+  font-weight: 500;
+  flex: 1;
+}

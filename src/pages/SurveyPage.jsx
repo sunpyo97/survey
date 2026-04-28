@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 
+
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbw-JZ4614gkk1gAgP5z3gFipL3uBKgyarikWHsSzZo68Pc3kYefzme2ZHdeDzJnr_yt/exec';
 const IS_DEV = import.meta.env.DEV;
 
@@ -225,29 +226,16 @@ const DynamicQuestion = ({ question, value, onChange, mentors }) => {
 };
 
 export default function SurveyPage() {
-  const [step, setStep] = useState(0); 
+  const [step, setStep] = useState(0);
   const [stepHistory, setStepHistory] = useState([]);
-  const [errorMsg, setErrorMsg] = useState('');
   const [mentors, setMentors] = useState([]);
   const [questions, setQuestions] = useState([]);
-  const [token, setToken] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [answers, setAnswers] = useState({});
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlToken = urlParams.get('token');
-
-    if (!urlToken && !IS_DEV) {
-      setErrorMsg('정상적인 접근이 아닙니다. (토큰 없음)');
-      setStep(-1);
-      return;
-    }
-
-    setToken(urlToken || 'dev_token');
-    
-    const verifyToken = async () => {
-      if (IS_DEV && !urlToken) {
+    const loadQuestions = async () => {
+      if (IS_DEV) {
         setTimeout(() => {
           setMentors([
             { id: 'm1', name: '김코딩', role: '프론트엔드 개발 멘토' }
@@ -257,30 +245,27 @@ export default function SurveyPage() {
             { id: 'q2', step: 3, type: 'short_text', title: '누구의 추천인가요?', required: true },
             { id: 'q3', step: 4, type: 'checkbox', title: '관심 분야는?', options: '["개발", "디자인", "기획"]', required: false }
           ]);
-          setStep(1); 
-        }, 1000);
+          setStep(1);
+        }, 500);
         return;
       }
 
       try {
-        const res = await fetch(`${GAS_URL}?action=verify&token=${urlToken}`);
+        const res = await fetch(`${GAS_URL}?action=getQuestions`);
         const result = await res.json();
-        
         if (result.success) {
           setMentors(result.mentors || []);
           setQuestions(result.questions || []);
           setStep(1);
         } else {
-          setErrorMsg(result.message || '오류가 발생했습니다.');
-          setStep(-1);
+          setStep(1);
         }
       } catch (err) {
-        setErrorMsg('서버와 통신할 수 없습니다.');
-        setStep(-1);
+        setStep(1);
       }
     };
 
-    verifyToken();
+    loadQuestions();
   }, []);
 
   // 전체 가능한 스텝 목록 정렬
@@ -354,7 +339,7 @@ export default function SurveyPage() {
     try {
       const res = await fetch(GAS_URL, {
         method: 'POST',
-        body: JSON.stringify({ action: 'submitSurvey', token: token, answers: answers })
+        body: JSON.stringify({ action: 'submitSurvey', answers: answers })
       });
       const result = await res.json();
       if (result.success) setStep(maxStep + 1);
@@ -371,7 +356,6 @@ export default function SurveyPage() {
   };
 
   if (step === 0) return <div className="state-screen"><div className="loader"></div><p>데이터 로딩중...</p></div>;
-  if (step === -1) return <div className="state-screen"><div className="state-icon">🚫</div><h2>접근 불가</h2><p>{errorMsg}</p></div>;
   if (step === 1) return <IntroScreen onStart={() => { setStepHistory([1]); setStep(availableSteps[0] || 2); }} />;
   if (step > maxStep) return <div className="state-screen"><div className="state-icon">🎉</div><h2>설문이 완료되었습니다</h2><p>감사합니다!</p></div>;
 

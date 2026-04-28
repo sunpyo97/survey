@@ -353,15 +353,38 @@ export default function SurveyPage() {
       </div>
 
       <div className="content" style={{ marginTop: '24px' }}>
-        {currentStepQuestions.map(q => (
-          <DynamicQuestion 
-            key={q.id} 
-            question={q} 
-            value={answers[q.id]} 
-            onChange={(val) => updateAnswer(q.id, val)} 
-            mentors={mentors} 
-          />
-        ))}
+        {(() => {
+          const categories = [];
+          const seen = {};
+          currentStepQuestions.forEach(q => {
+            const cat = q.category || '';
+            if (!seen[cat]) { seen[cat] = true; categories.push(cat); }
+          });
+
+          return categories.map((cat, catIdx) => {
+            const catQuestions = currentStepQuestions.filter(q => (q.category || '') === cat);
+            return (
+              <div key={cat || catIdx} style={{ marginBottom: '32px' }}>
+                {cat && (
+                  <div style={{ marginBottom: '16px', paddingBottom: '10px', borderBottom: '2px solid #e0e0e0' }}>
+                    <h2 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-color)' }}>
+                      {catIdx + 1}. {cat}
+                    </h2>
+                  </div>
+                )}
+                {catQuestions.map(q => (
+                  <DynamicQuestion
+                    key={q.id}
+                    question={q}
+                    value={answers[q.id]}
+                    onChange={(val) => updateAnswer(q.id, val)}
+                    mentors={mentors}
+                  />
+                ))}
+              </div>
+            );
+          });
+        })()}
         {currentStepQuestions.length === 0 && <p>이 스텝에는 설정된 문항이 없습니다.</p>}
       </div>
 

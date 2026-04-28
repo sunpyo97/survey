@@ -29,6 +29,7 @@ export default function AdminPage() {
         ...q,
         imageUrl: q.image_url || '',
         shuffleOptions: q.shuffle_options || false,
+        category: q.category || '',
       })));
     } catch (err) {
       alert('데이터를 불러오는데 실패했습니다: ' + err.message);
@@ -51,6 +52,7 @@ export default function AdminPage() {
         required: q.required || false,
         logic: q.logic || '{}',
         shuffle_options: q.shuffleOptions || false,
+        category: q.category || '',
       }));
 
       const { error: delError } = await supabase.from('questions').delete().neq('id', '');
@@ -80,7 +82,8 @@ export default function AdminPage() {
       options: '["옵션 1"]',
       required: false,
       logic: '{}',
-      shuffleOptions: false
+      shuffleOptions: false,
+      category: ''
     };
     setQuestions([...questions, newQ]);
   };
@@ -236,19 +239,28 @@ export default function AdminPage() {
               </div>
               
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ marginBottom: '8px' }}>
+                  <input
+                    type="text"
+                    placeholder="카테고리 (예: 기본 만족도, 프로그램 구성 만족도)"
+                    value={q.category || ''}
+                    onChange={(e) => handleChange(idx, 'category', e.target.value)}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '13px', color: '#888', background: '#fafafa' }}
+                  />
+                </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <div style={{ flex: 1 }}>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="질문 제목"
-                      value={q.title} 
+                      value={q.title}
                       onChange={(e) => handleChange(idx, 'title', e.target.value)}
                       style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '16px', fontWeight: 'bold' }}
                     />
                   </div>
                   <div style={{ width: '180px' }}>
-                    <select 
-                      value={q.type} 
+                    <select
+                      value={q.type}
                       onChange={(e) => handleChange(idx, 'type', e.target.value)}
                       style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '14px' }}
                     >

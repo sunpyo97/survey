@@ -138,14 +138,20 @@ const DynamicQuestion = ({ question, value, onChange, mentors }) => {
         return (
           <>
             <RatingScale value={value} onChange={onChange} max={5} />
-            <div className="scale-labels"><span>매우 불만족</span><span>매우 만족</span></div>
+            <div className="scale-labels">
+              <span>{question.label_min || '매우 불만족'}</span>
+              <span>{question.label_max || '매우 만족'}</span>
+            </div>
           </>
         );
       case 'rating11':
         return (
           <>
             <RatingScale value={value} onChange={onChange} max={11} />
-            <div className="scale-labels"><span>0점 (절대 안함)</span><span>10점 (적극 추천)</span></div>
+            <div className="scale-labels">
+              <span>{question.label_min || '0점 (절대 안함)'}</span>
+              <span>{question.label_max || '10점 (적극 추천)'}</span>
+            </div>
           </>
         );
       case 'short_text':
@@ -243,6 +249,8 @@ export default function SurveyPage() {
           ...q,
           imageUrl: q.image_url,
           shuffleOptions: q.shuffle_options,
+          label_min: q.label_min || '',
+          label_max: q.label_max || '',
         })));
         setMentors(mData || []);
       } catch (err) {

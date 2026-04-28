@@ -45,6 +45,8 @@ export default function AdminPage() {
         imageUrl: q.image_url || '',
         shuffleOptions: q.shuffle_options || false,
         category: q.category || '',
+        label_min: q.label_min || '',
+        label_max: q.label_max || '',
       })));
     } catch (err) {
       alert('데이터를 불러오는데 실패했습니다: ' + err.message);
@@ -68,6 +70,8 @@ export default function AdminPage() {
         logic: q.logic || '{}',
         shuffle_options: q.shuffleOptions || false,
         category: q.category || '',
+        label_min: q.label_min || '',
+        label_max: q.label_max || '',
       }));
       const { error: delError } = await supabase.from('questions').delete().neq('id', '');
       if (delError) throw delError;
@@ -88,7 +92,8 @@ export default function AdminPage() {
       id: `q_${Date.now()}`,
       step: 2, type: 'multiple_choice', title: '새로운 질문',
       description: '', imageUrl: '', options: '["옵션 1"]',
-      required: false, logic: '{}', shuffleOptions: false, category: ''
+      required: false, logic: '{}', shuffleOptions: false, category: '',
+      label_min: '', label_max: ''
     }]);
   };
 
@@ -336,6 +341,27 @@ export default function AdminPage() {
                           <input type="text" value={q.imageUrl || ''} onChange={(e) => handleChange(idx, 'imageUrl', e.target.value)}
                             placeholder="https://example.com/image.png" style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }} />
                         </div>
+                        {['rating5', 'rating11', 'linear_scale'].includes(q.type) && (
+                          <div>
+                            <label style={{ fontSize: '12px', color: '#666', marginBottom: '6px', display: 'block' }}>척도 라벨</label>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '3px' }}>왼쪽 (최솟값)</div>
+                                <input type="text" value={q.label_min || ''}
+                                  onChange={(e) => handleChange(idx, 'label_min', e.target.value)}
+                                  placeholder="예: 매우 불만족"
+                                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '13px' }} />
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '3px' }}>오른쪽 (최댓값)</div>
+                                <input type="text" value={q.label_max || ''}
+                                  onChange={(e) => handleChange(idx, 'label_max', e.target.value)}
+                                  placeholder="예: 매우 만족"
+                                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '13px' }} />
+                              </div>
+                            </div>
+                          </div>
+                        )}
                         <div style={{ display: 'flex', gap: '24px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <input type="checkbox" id={`req_${q.id}`} checked={q.required} onChange={(e) => handleChange(idx, 'required', e.target.checked)} />

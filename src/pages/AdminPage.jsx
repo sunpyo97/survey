@@ -1,11 +1,134 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, ArrowUp, ArrowDown, Save, RefreshCw, Settings, Image as ImageIcon, GitBranch, Shuffle, Download, BarChart2 } from 'lucide-react';
+import { Plus, Trash2, ArrowUp, ArrowDown, Save, RefreshCw, Settings, Image as ImageIcon, GitBranch, Shuffle, Download, BarChart2, TableIcon, PieChartIcon } from 'lucide-react';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { supabase } from '../lib/supabase';
+
+const CHART_COLORS = ['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7','#DDA0DD','#98D8C8','#F7DC6F','#BB8FCE','#85C1E9'];
+
+function QuestionChart({ question, responses }) {
+  const answers = responses.map(r => (r.answers || {})[question.id]).filter(v => v !== undefined && v !== null && v !== '');
+  if (answers.length === 0) return <p style={{ color: '#aaa', fontSize: '13px' }}>응답 없음</p>;
+
+  const type = question.type;
+
+  if (['rating5', 'linear_scale', 'rating11'].includes(type)) {
+    const max = type === 'rating11' ? 11 : 5;
+    const labels = type === 'rating11'
+      ? Array.from({ length: 11 }, (_, i) => i)
+      : Array.from({ length: 5 }, (_, i) => i + 1);
+    const counts = {};
+    labels.forEach(l => { counts[l] = 0; });
+    answers.forEach(v => { const n = Number(v); if (counts[n] !== undefined) counts[n]++; });
+    const total = answers.length;
+    const avg = (answers.reduce((s, v) => s + Number(v), 0) / total).toFixed(1);
+    const data = labels.map(l => ({ name: String(l), count: counts[l], pct: total ? Math.round(counts[l] / total * 100) : 0 }));
+    const pieData = data.filter(d => d.count > 0);
+
+    return (
+      <div>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+          <div style={{ background: '#fff3e0', borderRadius: '8px', padding: '8px 16px', textAlign: 'center' }}>
+            <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#e67e22' }}>{avg}</div>
+            <div style={{ fontSize: '11px', color: '#999' }}>평균 ({max}점 만점)</div>
+          </div>
+          <div style={{ background: '#e8f5e9', borderRadius: '8px', padding: '8px 16px', textAlign: 'center' }}>
+            <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#27ae60' }}>{total}</div>
+            <div style={{ fontSize: '11px', color: '#999' }}>응답 수</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1', minWidth: '200px' }}>
+            <ResponsiveContainer width="100%" height={180}>
+              <PieChart>
+                <Pie data={pieData} dataKey="count" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({ name, pct }) => `${name}점 ${pct}%`} labelLine={false}>
+                  {pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                </Pie>
+                <Tooltip formatter={(v, n) => [`${v}명`, `${n}점`]} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div style={{ flex: '1', minWidth: '200px' }}>
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                <Tooltip formatter={(v) => [`${v}명`]} />
+                <Bar dataKey="count" fill="#4ECDC4" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (['multiple_choice', 'dropdown'].includes(type)) {
+    const counts = {};
+    answers.forEach(v => { counts[v] = (counts[v] || 0) + 1; });
+    const total = answers.length;
+    const data = Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([name, count]) => ({ name, count, pct: Math.round(count / total * 100) }));
+    return (
+      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ flex: '1', minWidth: '180px' }}>
+          <ResponsiveContainer width="100%" height={200}>
+            <PieChart>
+              <Pie data={data} dataKey="count" nameKey="name" cx="50%" cy="50%" outerRadius={80}>
+                {data.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+              </Pie>
+              <Tooltip formatter={(v, n) => [`${v}명 (${Math.round(v / total * 100)}%)`, n]} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div style={{ flex: '1', minWidth: '160px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {data.map((d, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+              <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: CHART_COLORS[i % CHART_COLORS.length], flexShrink: 0 }} />
+              <span style={{ flex: 1 }}>{d.name}</span>
+              <span style={{ fontWeight: 'bold' }}>{d.count}명</span>
+              <span style={{ color: '#999', width: '36px', textAlign: 'right' }}>{d.pct}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (type === 'checkbox') {
+    const counts = {};
+    answers.forEach(arr => { (Array.isArray(arr) ? arr : [arr]).forEach(v => { counts[v] = (counts[v] || 0) + 1; }); });
+    const total = responses.length;
+    const data = Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([name, count]) => ({ name, count, pct: Math.round(count / total * 100) }));
+    return (
+      <ResponsiveContainer width="100%" height={Math.max(120, data.length * 36)}>
+        <BarChart data={data} layout="vertical" margin={{ top: 4, right: 40, left: 4, bottom: 4 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
+          <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} />
+          <Tooltip formatter={(v) => [`${v}명`]} />
+          <Bar dataKey="count" fill="#45B7D1" radius={[0, 4, 4, 0]} label={{ position: 'right', fontSize: 11, formatter: (v) => `${v}명` }} />
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '160px', overflowY: 'auto' }}>
+      {answers.map((a, i) => (
+        <div key={i} style={{ fontSize: '13px', padding: '6px 10px', background: '#f8f9fa', borderRadius: '6px', color: '#444' }}>
+          {String(a)}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('questions');
+  const [responseView, setResponseView] = useState('chart');
 
   // 문항 관리
   const [questions, setQuestions] = useState([]);
@@ -424,8 +547,20 @@ export default function AdminPage() {
       {/* ── 응답 현황 탭 ── */}
       {activeTab === 'responses' && (
         <>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <span style={{ fontSize: '15px', color: '#666' }}>총 <strong style={{ color: 'var(--text-color)' }}>{responses.length}건</strong>의 응답</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '15px', color: '#666' }}>총 <strong style={{ color: 'var(--text-color)' }}>{responses.length}건</strong>의 응답</span>
+              <div style={{ display: 'flex', border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden' }}>
+                <button onClick={() => setResponseView('chart')}
+                  style={{ padding: '6px 14px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', background: responseView === 'chart' ? 'var(--primary-color)' : '#fff', color: responseView === 'chart' ? '#fff' : '#666' }}>
+                  <BarChart2 size={14} /> 그래프
+                </button>
+                <button onClick={() => setResponseView('table')}
+                  style={{ padding: '6px 14px', border: 'none', borderLeft: '1px solid #ddd', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', background: responseView === 'table' ? 'var(--primary-color)' : '#fff', color: responseView === 'table' ? '#fff' : '#666' }}>
+                  <BarChart2 size={14} /> 표
+                </button>
+              </div>
+            </div>
             <div style={{ display: 'flex', gap: '12px' }}>
               <button onClick={fetchResponses} disabled={isLoadingResponses}
                 style={{ padding: '8px 16px', cursor: 'pointer', borderRadius: '8px', border: '1px solid #ccc', background: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -442,6 +577,16 @@ export default function AdminPage() {
             <div style={{ textAlign: 'center', padding: '60px', color: '#999' }}>불러오는 중...</div>
           ) : responses.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px', color: '#999' }}>아직 제출된 응답이 없습니다.</div>
+          ) : responseView === 'chart' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {[...questions].sort((a, b) => a.step - b.step).map(q => (
+                <div key={q.id} style={{ background: '#fff', borderRadius: '12px', border: '1px solid #eee', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                  <div style={{ marginBottom: '4px', fontSize: '11px', color: '#aaa' }}>{q.category || ''}</div>
+                  <h3 style={{ fontSize: '15px', fontWeight: 'bold', marginBottom: '16px', color: '#333' }}>{q.title}</h3>
+                  <QuestionChart question={q} responses={responses} />
+                </div>
+              ))}
+            </div>
           ) : (
             <div style={{ overflowX: 'auto', borderRadius: '12px', border: '1px solid #eee' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>

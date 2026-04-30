@@ -131,12 +131,15 @@ const DynamicQuestion = ({ question, value, onChange, mentors }) => {
   const renderInput = () => {
     switch (type) {
       case 'multiple_choice': {
-        const isOtherSelected = typeof value === 'string' && (value === '기타' || value.startsWith('기타:'));
-        const otherText = typeof value === 'string' && value.startsWith('기타:') ? value.slice(3).trim() : '';
+        const otherOption = displayOptions.find(opt => opt.startsWith('기타'));
+        const isOtherSelected = !!otherOption && typeof value === 'string' &&
+          (value === otherOption || value.startsWith(otherOption + ':'));
+        const otherText = isOtherSelected && value.startsWith(otherOption + ':')
+          ? value.slice(otherOption.length + 1).trim() : '';
         return (
           <div className="options-vertical">
             {displayOptions.map((opt, idx) => {
-              const isOther = opt === '기타';
+              const isOther = opt.startsWith('기타');
               const isChecked = isOther ? isOtherSelected : value === opt;
               return (
                 <div key={idx}>
@@ -146,7 +149,7 @@ const DynamicQuestion = ({ question, value, onChange, mentors }) => {
                       name={`q_${question.id}`}
                       value={opt}
                       checked={isChecked}
-                      onChange={() => onChange(isOther ? '기타' : opt)}
+                      onChange={() => onChange(isOther ? opt : opt)}
                       className="radio-input"
                     />
                     <span className="option-text">{opt}</span>
@@ -158,7 +161,7 @@ const DynamicQuestion = ({ question, value, onChange, mentors }) => {
                       style={{ minHeight: '44px', marginTop: '8px', marginLeft: '28px', width: 'calc(100% - 28px)' }}
                       placeholder="직접 입력해주세요."
                       value={otherText}
-                      onChange={(e) => onChange('기타: ' + e.target.value)}
+                      onChange={(e) => onChange(otherOption + ': ' + e.target.value)}
                     />
                   )}
                 </div>
@@ -169,13 +172,14 @@ const DynamicQuestion = ({ question, value, onChange, mentors }) => {
       }
       case 'checkbox': {
         const currentVals = Array.isArray(value) ? value : [];
-        const otherEntry = currentVals.find(v => typeof v === 'string' && (v === '기타' || v.startsWith('기타:')));
+        const otherOption = displayOptions.find(opt => opt.startsWith('기타'));
+        const otherEntry = otherOption && currentVals.find(v => typeof v === 'string' && (v === otherOption || v.startsWith(otherOption + ':')));
         const isOtherChecked = !!otherEntry;
-        const otherText = otherEntry && otherEntry.startsWith('기타:') ? otherEntry.slice(3).trim() : '';
+        const otherText = otherEntry && otherEntry.startsWith(otherOption + ':') ? otherEntry.slice(otherOption.length + 1).trim() : '';
         return (
           <div className="options-vertical">
             {displayOptions.map((opt, idx) => {
-              const isOther = opt === '기타';
+              const isOther = opt.startsWith('기타');
               const isChecked = isOther ? isOtherChecked : currentVals.includes(opt);
               return (
                 <div key={idx}>
@@ -187,7 +191,7 @@ const DynamicQuestion = ({ question, value, onChange, mentors }) => {
                       onChange={(e) => {
                         if (isOther) {
                           if (e.target.checked) {
-                            onChange([...currentVals.filter(v => typeof v !== 'string' || !v.startsWith('기타')), '기타']);
+                            onChange([...currentVals.filter(v => typeof v !== 'string' || !v.startsWith('기타')), opt]);
                           } else {
                             onChange(currentVals.filter(v => typeof v !== 'string' || !v.startsWith('기타')));
                           }
@@ -213,7 +217,7 @@ const DynamicQuestion = ({ question, value, onChange, mentors }) => {
                       onChange={(e) => {
                         onChange([
                           ...currentVals.filter(v => typeof v !== 'string' || !v.startsWith('기타')),
-                          '기타: ' + e.target.value,
+                          otherOption + ': ' + e.target.value,
                         ]);
                       }}
                     />

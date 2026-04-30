@@ -615,7 +615,7 @@ export default function AdminPage() {
                 </div>
               ))}
             </div>
-          ) : (
+          ) : responseView === 'table' ? (
             <div style={{ overflowX: 'auto', borderRadius: '12px', border: '1px solid #eee' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                 <thead>
@@ -658,7 +658,7 @@ export default function AdminPage() {
                 </tbody>
               </table>
             </div>
-          ) : responseView === 'individual' ? (
+          ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {responses.map((r, idx) => {
                 const ans = r.answers || {};
@@ -710,7 +710,7 @@ export default function AdminPage() {
                 );
               })}
             </div>
-          ) : null}
+          )}
         </>
       )}
     </div>

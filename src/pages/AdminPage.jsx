@@ -440,8 +440,8 @@ export default function AdminPage() {
                       <div style={{ width: '180px' }}>
                         <select value={q.type} onChange={(e) => handleChange(idx, 'type', e.target.value)}
                           style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '14px' }}>
-                          <option value="multiple_choice">객관식 질문</option>
-                          <option value="checkbox">체크박스</option>
+                          <option value="multiple_choice">객관식 단일선택</option>
+                          <option value="checkbox">객관식 중복선택</option>
                           <option value="dropdown">드롭다운</option>
                           <option value="short_text">단답형</option>
                           <option value="long_text">장문형</option>

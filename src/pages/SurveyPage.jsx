@@ -167,33 +167,63 @@ const DynamicQuestion = ({ question, value, onChange, mentors }) => {
           </div>
         );
       }
-      case 'checkbox':
+      case 'checkbox': {
+        const currentVals = Array.isArray(value) ? value : [];
+        const otherEntry = currentVals.find(v => typeof v === 'string' && (v === '기타' || v.startsWith('기타:')));
+        const isOtherChecked = !!otherEntry;
+        const otherText = otherEntry && otherEntry.startsWith('기타:') ? otherEntry.slice(3).trim() : '';
         return (
           <div className="options-vertical">
             {displayOptions.map((opt, idx) => {
-              const isChecked = Array.isArray(value) && value.includes(opt);
+              const isOther = opt === '기타';
+              const isChecked = isOther ? isOtherChecked : currentVals.includes(opt);
               return (
-                <label key={idx} className="option-label">
-                  <input 
-                    type="checkbox" 
-                    value={opt} 
-                    checked={isChecked} 
-                    onChange={(e) => {
-                      const currentVals = Array.isArray(value) ? value : [];
-                      if (e.target.checked) {
-                        onChange([...currentVals, opt]);
-                      } else {
-                        onChange(currentVals.filter(v => v !== opt));
-                      }
-                    }} 
-                    className="checkbox-input"
-                  />
-                  <span className="option-text">{opt}</span>
-                </label>
+                <div key={idx}>
+                  <label className="option-label">
+                    <input
+                      type="checkbox"
+                      value={opt}
+                      checked={isChecked}
+                      onChange={(e) => {
+                        if (isOther) {
+                          if (e.target.checked) {
+                            onChange([...currentVals.filter(v => !v.startsWith('기타')), '기타']);
+                          } else {
+                            onChange(currentVals.filter(v => typeof v !== 'string' || !v.startsWith('기타')));
+                          }
+                        } else {
+                          if (e.target.checked) {
+                            onChange([...currentVals, opt]);
+                          } else {
+                            onChange(currentVals.filter(v => v !== opt));
+                          }
+                        }
+                      }}
+                      className="checkbox-input"
+                    />
+                    <span className="option-text">{opt}</span>
+                  </label>
+                  {isOther && isOtherChecked && (
+                    <input
+                      type="text"
+                      className="textarea-input"
+                      style={{ minHeight: '44px', marginTop: '8px', marginLeft: '28px', width: 'calc(100% - 28px)' }}
+                      placeholder="직접 입력해주세요."
+                      value={otherText}
+                      onChange={(e) => {
+                        onChange([
+                          ...currentVals.filter(v => typeof v !== 'string' || !v.startsWith('기타')),
+                          '기타: ' + e.target.value,
+                        ]);
+                      }}
+                    />
+                  )}
+                </div>
               );
             })}
           </div>
         );
+      }
       case 'dropdown':
         return (
           <select 

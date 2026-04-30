@@ -141,24 +141,43 @@ const DynamicQuestion = ({ question, value, onChange, mentors }) => {
 
   const renderInput = () => {
     switch (type) {
-      case 'multiple_choice':
+      case 'multiple_choice': {
+        const isOtherSelected = typeof value === 'string' && (value === '기타' || value.startsWith('기타:'));
+        const otherText = typeof value === 'string' && value.startsWith('기타:') ? value.slice(3).trim() : '';
         return (
           <div className="options-vertical">
-            {displayOptions.map((opt, idx) => (
-              <label key={idx} className="option-label">
-                <input 
-                  type="radio" 
-                  name={`q_${question.id}`} 
-                  value={opt} 
-                  checked={value === opt} 
-                  onChange={(e) => onChange(e.target.value)} 
-                  className="radio-input"
-                />
-                <span className="option-text">{opt}</span>
-              </label>
-            ))}
+            {displayOptions.map((opt, idx) => {
+              const isOther = opt === '기타';
+              const isChecked = isOther ? isOtherSelected : value === opt;
+              return (
+                <div key={idx}>
+                  <label className="option-label">
+                    <input
+                      type="radio"
+                      name={`q_${question.id}`}
+                      value={opt}
+                      checked={isChecked}
+                      onChange={() => onChange(isOther ? '기타' : opt)}
+                      className="radio-input"
+                    />
+                    <span className="option-text">{opt}</span>
+                  </label>
+                  {isOther && isOtherSelected && (
+                    <input
+                      type="text"
+                      className="textarea-input"
+                      style={{ minHeight: '44px', marginTop: '8px', marginLeft: '28px', width: 'calc(100% - 28px)' }}
+                      placeholder="직접 입력해주세요."
+                      value={otherText}
+                      onChange={(e) => onChange('기타: ' + e.target.value)}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
         );
+      }
       case 'checkbox':
         return (
           <div className="options-vertical">

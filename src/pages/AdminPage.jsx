@@ -65,10 +65,7 @@ function QuestionChart({ question, responses }) {
 
   if (['multiple_choice', 'dropdown'].includes(type)) {
     const counts = {};
-    answers.forEach(v => {
-      const key = typeof v === 'string' && v.startsWith('기타:') ? '기타' : v;
-      counts[key] = (counts[key] || 0) + 1;
-    });
+    answers.forEach(v => { counts[v] = (counts[v] || 0) + 1; });
     const total = answers.length;
     const data = Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([name, count]) => ({ name, count, pct: Math.round(count / total * 100) }));
     return (

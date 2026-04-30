@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, ArrowUp, ArrowDown, Save, RefreshCw, Settings, Image as ImageIcon, GitBranch, Shuffle, Download, BarChart2, TableIcon, PieChartIcon } from 'lucide-react';
+import { Plus, Trash2, ArrowUp, ArrowDown, Save, RefreshCw, Settings, Image as ImageIcon, GitBranch, Shuffle, Download, BarChart2, Table2, Users } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { supabase } from '../lib/supabase';
 
@@ -577,11 +577,11 @@ export default function AdminPage() {
                 </button>
                 <button onClick={() => setResponseView('table')}
                   style={{ padding: '6px 14px', border: 'none', borderLeft: '1px solid #ddd', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', background: responseView === 'table' ? 'var(--primary-color)' : '#fff', color: responseView === 'table' ? '#fff' : '#666' }}>
-                  <TableIcon size={14} /> 표
+                  <Table2 size={14} /> 표
                 </button>
                 <button onClick={() => setResponseView('individual')}
                   style={{ padding: '6px 14px', border: 'none', borderLeft: '1px solid #ddd', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', background: responseView === 'individual' ? 'var(--primary-color)' : '#fff', color: responseView === 'individual' ? '#fff' : '#666' }}>
-                  <PieChartIcon size={14} /> 개인별
+                  <Users size={14} /> 개인별
                 </button>
               </div>
             </div>

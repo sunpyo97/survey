@@ -75,7 +75,7 @@ const RespondentInfoScreen = ({ onNext, info, onChange }) => {
             <label style={labelStyle}>성함 <span style={{ color: 'var(--primary-color)' }}>*</span></label>
             <input
               type="text"
-              placeholder="홍길동"
+              placeholder=""
               value={info.name}
               onChange={(e) => onChange({ ...info, name: e.target.value })}
               style={inputStyle}
@@ -85,7 +85,7 @@ const RespondentInfoScreen = ({ onNext, info, onChange }) => {
             <label style={labelStyle}>소속 <span style={{ color: 'var(--primary-color)' }}>*</span></label>
             <input
               type="text"
-              placeholder="예: ○○ 농아인협회"
+              placeholder=""
               value={info.org}
               onChange={(e) => onChange({ ...info, org: e.target.value })}
               style={inputStyle}
@@ -95,7 +95,7 @@ const RespondentInfoScreen = ({ onNext, info, onChange }) => {
             <label style={labelStyle}>직함 <span style={{ color: 'var(--primary-color)' }}>*</span></label>
             <input
               type="text"
-              placeholder="예: 지회장, 사무국장"
+              placeholder=""
               value={info.title}
               onChange={(e) => onChange({ ...info, title: e.target.value })}
               style={inputStyle}

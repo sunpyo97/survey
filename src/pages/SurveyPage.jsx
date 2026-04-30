@@ -46,7 +46,6 @@ const RespondentInfoScreen = ({ onNext, info, onChange }) => {
   const handleSubmit = () => {
     if (!info.name.trim()) { alert('성함을 입력해주세요.'); return; }
     if (!info.org.trim()) { alert('소속을 입력해주세요.'); return; }
-    if (!info.title.trim()) { alert('직함을 입력해주세요.'); return; }
     onNext();
   };
 
@@ -88,16 +87,6 @@ const RespondentInfoScreen = ({ onNext, info, onChange }) => {
               placeholder=""
               value={info.org}
               onChange={(e) => onChange({ ...info, org: e.target.value })}
-              style={inputStyle}
-            />
-          </div>
-          <div style={fieldStyle}>
-            <label style={labelStyle}>직함 <span style={{ color: 'var(--primary-color)' }}>*</span></label>
-            <input
-              type="text"
-              placeholder=""
-              value={info.title}
-              onChange={(e) => onChange({ ...info, title: e.target.value })}
               style={inputStyle}
             />
           </div>

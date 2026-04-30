@@ -187,7 +187,7 @@ const DynamicQuestion = ({ question, value, onChange, mentors }) => {
                       onChange={(e) => {
                         if (isOther) {
                           if (e.target.checked) {
-                            onChange([...currentVals.filter(v => !v.startsWith('기타')), '기타']);
+                            onChange([...currentVals.filter(v => typeof v !== 'string' || !v.startsWith('기타')), '기타']);
                           } else {
                             onChange(currentVals.filter(v => typeof v !== 'string' || !v.startsWith('기타')));
                           }

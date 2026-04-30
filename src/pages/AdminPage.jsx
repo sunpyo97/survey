@@ -129,6 +129,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('questions');
   const [responseView, setResponseView] = useState('chart');
+  const [expandedRespondent, setExpandedRespondent] = useState(null);
 
   // 문항 관리
   const [questions, setQuestions] = useState([]);
@@ -324,12 +325,18 @@ export default function AdminPage() {
     const sortedQuestions = [...questions].sort((a, b) => a.step - b.step);
     const qIds = sortedQuestions.map(q => q.id);
 
-    const headers = ['제출시간', ...sortedQuestions.map(q => q.title || q.id)];
+    const headers = ['제출시간', '성함', '소속', '직함', ...sortedQuestions.map(q => q.title || q.id)];
 
     const rows = responses.map(r => {
       const answers = r.answers || {};
       const time = new Date(r.created_at).toLocaleString('ko-KR');
-      return [time, ...qIds.map(id => formatAnswer(answers[id]))];
+      return [
+        time,
+        answers._respondent_name || '',
+        answers._respondent_org || '',
+        answers._respondent_title || '',
+        ...qIds.map(id => formatAnswer(answers[id])),
+      ];
     });
 
     const csvContent = [headers, ...rows]
@@ -570,7 +577,11 @@ export default function AdminPage() {
                 </button>
                 <button onClick={() => setResponseView('table')}
                   style={{ padding: '6px 14px', border: 'none', borderLeft: '1px solid #ddd', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', background: responseView === 'table' ? 'var(--primary-color)' : '#fff', color: responseView === 'table' ? '#fff' : '#666' }}>
-                  <BarChart2 size={14} /> 표
+                  <TableIcon size={14} /> 표
+                </button>
+                <button onClick={() => setResponseView('individual')}
+                  style={{ padding: '6px 14px', border: 'none', borderLeft: '1px solid #ddd', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', background: responseView === 'individual' ? 'var(--primary-color)' : '#fff', color: responseView === 'individual' ? '#fff' : '#666' }}>
+                  <PieChartIcon size={14} /> 개인별
                 </button>
               </div>
             </div>
@@ -611,6 +622,9 @@ export default function AdminPage() {
                   <tr style={{ background: '#f5f7fa' }}>
                     <th style={{ padding: '12px 16px', textAlign: 'left', borderBottom: '1px solid #eee', whiteSpace: 'nowrap', fontWeight: 'bold', color: '#555' }}>번호</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left', borderBottom: '1px solid #eee', whiteSpace: 'nowrap', fontWeight: 'bold', color: '#555' }}>제출시간</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', borderBottom: '1px solid #eee', whiteSpace: 'nowrap', fontWeight: 'bold', color: '#2c7be5' }}>성함</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', borderBottom: '1px solid #eee', whiteSpace: 'nowrap', fontWeight: 'bold', color: '#2c7be5' }}>소속</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', borderBottom: '1px solid #eee', whiteSpace: 'nowrap', fontWeight: 'bold', color: '#2c7be5' }}>직함</th>
                     {[...questions].sort((a, b) => a.step - b.step).map(q => (
                       <th key={q.id} style={{ padding: '12px 16px', textAlign: 'left', borderBottom: '1px solid #eee', whiteSpace: 'nowrap', fontWeight: 'bold', color: '#555', maxWidth: '200px' }}>
                         {q.title}
@@ -625,6 +639,15 @@ export default function AdminPage() {
                       <td style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0', whiteSpace: 'nowrap', color: '#666' }}>
                         {new Date(r.created_at).toLocaleString('ko-KR')}
                       </td>
+                      <td style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0', whiteSpace: 'nowrap', fontWeight: '600', color: '#2c7be5' }}>
+                        {(r.answers || {})._respondent_name || '-'}
+                      </td>
+                      <td style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0', whiteSpace: 'nowrap', color: '#444' }}>
+                        {(r.answers || {})._respondent_org || '-'}
+                      </td>
+                      <td style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0', whiteSpace: 'nowrap', color: '#444' }}>
+                        {(r.answers || {})._respondent_title || '-'}
+                      </td>
                       {[...questions].sort((a, b) => a.step - b.step).map(q => (
                         <td key={q.id} style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {formatAnswer((r.answers || {})[q.id])}
@@ -635,7 +658,59 @@ export default function AdminPage() {
                 </tbody>
               </table>
             </div>
-          )}
+          ) : responseView === 'individual' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {responses.map((r, idx) => {
+                const ans = r.answers || {};
+                const name = ans._respondent_name || '(이름 없음)';
+                const org = ans._respondent_org || '';
+                const title = ans._respondent_title || '';
+                const isExpanded = expandedRespondent === r.id;
+                const sortedQs = [...questions].sort((a, b) => a.step - b.step);
+                return (
+                  <div key={r.id} style={{ background: '#fff', borderRadius: '12px', border: '1px solid #eee', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                    <button
+                      onClick={() => setExpandedRespondent(isExpanded ? null : r.id)}
+                      style={{ width: '100%', padding: '16px 20px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', textAlign: 'left' }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--primary-color)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '14px', flexShrink: 0 }}>
+                          {name.charAt(0)}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: '700', fontSize: '15px', color: '#222' }}>{name}</div>
+                          <div style={{ fontSize: '13px', color: '#888', marginTop: '2px' }}>
+                            {[org, title].filter(Boolean).join(' · ')}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{ fontSize: '12px', color: '#aaa' }}>{new Date(r.created_at).toLocaleString('ko-KR')}</span>
+                        <span style={{ fontSize: '18px', color: '#bbb', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▾</span>
+                      </div>
+                    </button>
+                    {isExpanded && (
+                      <div style={{ borderTop: '1px solid #f0f0f0', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        {sortedQs.map(q => {
+                          const val = ans[q.id];
+                          if (val === undefined || val === null || val === '') return null;
+                          return (
+                            <div key={q.id} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              <div style={{ fontSize: '12px', color: '#aaa' }}>{q.category || ''}</div>
+                              <div style={{ fontSize: '14px', fontWeight: '600', color: '#555' }}>{q.title}</div>
+                              <div style={{ fontSize: '14px', color: '#222', padding: '10px 14px', background: '#f8f9fa', borderRadius: '8px', lineHeight: '1.5' }}>
+                                {formatAnswer(val)}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
         </>
       )}
     </div>

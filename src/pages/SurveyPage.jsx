@@ -31,13 +31,84 @@ const IntroScreen = ({ onStart }) => {
         더욱 발전하는 다음 프로그램을 위해<br/>
         여러분의 소중한 경험을 나누어주세요!
       </p>
-      <button 
-        className="btn-primary" 
-        style={{ width: '100%', maxWidth: '300px', flex: 'none', height: '54px', fontSize: '18px' }} 
+      <button
+        className="btn-primary"
+        style={{ width: '100%', maxWidth: '300px', flex: 'none', height: '54px', fontSize: '18px' }}
         onClick={onStart}
       >
         설문 시작하기
       </button>
+    </div>
+  );
+};
+
+const RespondentInfoScreen = ({ onNext, info, onChange }) => {
+  const handleSubmit = () => {
+    if (!info.name.trim()) { alert('성함을 입력해주세요.'); return; }
+    if (!info.org.trim()) { alert('소속을 입력해주세요.'); return; }
+    if (!info.title.trim()) { alert('직함을 입력해주세요.'); return; }
+    onNext();
+  };
+
+  const fieldStyle = {
+    display: 'flex', flexDirection: 'column', gap: '8px',
+  };
+  const labelStyle = { fontSize: '15px', fontWeight: '600', color: 'var(--text-color)' };
+  const inputStyle = {
+    padding: '14px 16px', borderRadius: '10px', border: '1.5px solid var(--border-color)',
+    fontSize: '16px', outline: 'none', transition: 'border-color 0.2s',
+    fontFamily: 'var(--font-family)',
+  };
+
+  return (
+    <div className="app-container">
+      <div className="content" style={{ marginTop: '32px' }}>
+        <div style={{ marginBottom: '28px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '800', marginBottom: '8px' }}>기본 정보 입력</h2>
+          <p style={{ fontSize: '14px', color: 'var(--text-light)', lineHeight: '1.6' }}>
+            설문을 시작하기 전에 기본 정보를 입력해주세요.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={fieldStyle}>
+            <label style={labelStyle}>성함 <span style={{ color: 'var(--primary-color)' }}>*</span></label>
+            <input
+              type="text"
+              placeholder="홍길동"
+              value={info.name}
+              onChange={(e) => onChange({ ...info, name: e.target.value })}
+              style={inputStyle}
+            />
+          </div>
+          <div style={fieldStyle}>
+            <label style={labelStyle}>소속 <span style={{ color: 'var(--primary-color)' }}>*</span></label>
+            <input
+              type="text"
+              placeholder="예: ○○ 농아인협회"
+              value={info.org}
+              onChange={(e) => onChange({ ...info, org: e.target.value })}
+              style={inputStyle}
+            />
+          </div>
+          <div style={fieldStyle}>
+            <label style={labelStyle}>직함 <span style={{ color: 'var(--primary-color)' }}>*</span></label>
+            <input
+              type="text"
+              placeholder="예: 지회장, 사무국장"
+              value={info.title}
+              onChange={(e) => onChange({ ...info, title: e.target.value })}
+              style={inputStyle}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="bottom-actions">
+        <button className="btn-primary" onClick={handleSubmit}>
+          다음으로
+        </button>
+      </div>
     </div>
   );
 };
@@ -237,6 +308,7 @@ export default function SurveyPage() {
   const [questions, setQuestions] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [answers, setAnswers] = useState({});
+  const [respondentInfo, setRespondentInfo] = useState({ name: '', org: '', title: '' });
 
   useEffect(() => {
     const loadQuestions = async () => {
@@ -341,7 +413,14 @@ export default function SurveyPage() {
     }
 
     try {
-      const { error } = await supabase.from('responses').insert({ answers });
+      const { error } = await supabase.from('responses').insert({
+        answers: {
+          ...answers,
+          _respondent_name: respondentInfo.name,
+          _respondent_org: respondentInfo.org,
+          _respondent_title: respondentInfo.title,
+        },
+      });
       if (error) throw error;
       setStep(maxStep + 1);
     } catch (err) {
@@ -356,7 +435,14 @@ export default function SurveyPage() {
   };
 
   if (step === 0) return <div className="state-screen"><div className="loader"></div><p>데이터 로딩중...</p></div>;
-  if (step === 1) return <IntroScreen onStart={() => { setStepHistory([1]); setStep(availableSteps[0] || 2); }} />;
+  if (step === 1) return <IntroScreen onStart={() => setStep('info')} />;
+  if (step === 'info') return (
+    <RespondentInfoScreen
+      info={respondentInfo}
+      onChange={setRespondentInfo}
+      onNext={() => { setStepHistory(['info']); setStep(availableSteps[0] || 2); }}
+    />
+  );
   if (step > maxStep) return <div className="state-screen"><div className="state-icon">🎉</div><h2>설문이 완료되었습니다</h2><p>감사합니다!</p></div>;
 
   // 진행률 계산
